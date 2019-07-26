@@ -120,3 +120,22 @@ select * from consulta_medica limit 0, 3;
 select * from consulta_medica where year(data_hora) = 2015 limit 2,2;
 
 `10.1 - mostre o nome da especialidade de cada médico`
+select medico.nome , especialidade.especialidade_designacao from medico, especialidade 
+where especialidade.especialidade_codigo = medico.especialidade;
+
+select nome, especialidade_designacao from especialidade 
+JOIN medico ON(especialidade.especialidade_codigo = medico.especialidade);
+
+`10.2 - mostrar quanto custou cada consulta`
+select consulta_medica.codigo, consulta_medica.data_hora, consulta_medica.utente, consulta_medica.sala, especialidade.especialidade_preco as precario, 
+medico.nome from consulta_medica, especialidade, medico
+where consulta_medica.medico = medico.numero_ordem and medico.especialidade = especialidade.especialidade_codigo;
+
+`10.3 - especialidade em que cada utente foi consultado`
+`select codigo, data_hora, utente.nome, medico.nome, sala, especialidade_designacao from consulta_medica
+JOIN especialidade ON(especialidade.especialidade_codigo = medico.especialidade);
+
+
+select nome, data_hora, sala, especialidade_designacao from utente
+JOIN consulta_medica ON(especialidade.utente = utente.nome)
+JOIN especialidade ON(especialidade_designacao = consul)`
