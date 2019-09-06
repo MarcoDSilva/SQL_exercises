@@ -280,3 +280,25 @@ FROM consulta_medica c
 	INNER JOIN medico m ON m.numero_ordem = c.medico 
 	INNER JOIN especialidade e ON e.especialidade_codigo = m.especialidade
 WHERE NOT c.realizada;
+
+`12.1. Mostre todas as localidades com os respetivos utentes que lá residem.`
+SELECT cp.localidade, u.nome, cp.codigo_postal
+FROM codigo_postal cp 
+	LEFT JOIN utente u 
+	ON cp.codigo_postal = u.codigo_postal;
+
+`12.2. Liste todos os utentes (nome e data de nascimento) e a data de cada uma das consultas que estes tiveram.`
+
+SELECT u.nome, u.data_nascimento, c.data_hora
+FROM utente u
+	RIGHT JOIN consulta_medica c 
+	ON u.numero_utente = c.utente;
+
+SELECT u.nome, u.data_nascimento, c.data_hora
+FROM utente u
+	LEFT JOIN consulta_medica c 
+	ON u.numero_utente = c.utente;
+
+`
+12.3. Mostre todas as localidades cujos seus utentes nunca fizeram nenhuma consulta.
+12.4. Mostre todos os utentes que nunca tiveram nenhuma consulta.`
