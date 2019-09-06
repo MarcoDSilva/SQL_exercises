@@ -132,10 +132,151 @@ medico.nome from consulta_medica, especialidade, medico
 where consulta_medica.medico = medico.numero_ordem and medico.especialidade = especialidade.especialidade_codigo;
 
 `10.3 - especialidade em que cada utente foi consultado`
-`select codigo, data_hora, utente.nome, medico.nome, sala, especialidade_designacao from consulta_medica
-JOIN especialidade ON(especialidade.especialidade_codigo = medico.especialidade);
+
+select codigo, U.nome nome, data_hora, especialidade_designacao 
+FROM utente U, especialidade E, medico M, consulta_medica C 
+WHERE U.numero_utente = C.utente 
+AND E.especialidade_codigo = M.especialidade
+AND C.medico = M.numero_ordem
+AND C.realizada = 1;
+
+`10.4 - mostre os utentes e médicos que moram na mesma localidade`
+
+select U.nome, M.nome, U.codigo_postal
+FROM utente U, medico M
+WHERE U.codigo_postal = M.codigo_postal;
 
 
-select nome, data_hora, sala, especialidade_designacao from utente
-JOIN consulta_medica ON(especialidade.utente = utente.nome)
-JOIN especialidade ON(especialidade_designacao = consul)`
+`10.5. Faça uma listagem das consultas médicas com indicação dos nomes do médico e da utente e ainda o preço da consulta.`
+
+select c.codigo consulta, u.nome utente , m.nome medico, e.especialidade_preco
+FROM consulta_medica c, utente u, medico m, especialidade e
+WHERE u.numero_utente = c.utente
+AND e.especialidade_codigo = m.especialidade
+AND m.numero_ordem = c.medico
+AND c.realizada = 1;
+
+`10.6. Mostre o nome de todos os utentes que pagaram mais que 69,00 € por uma consulta.`
+
+select c.codigo consulta, u.nome utente, e.especialidade_preco preco
+FROM consulta_medica c, utente u, especialidade e, medico m
+WHERE u.numero_utente = c.utente
+	AND e.especialidade_codigo = m.especialidade
+	AND m.numero_ordem = c.medico
+	AND e.especialidade_preco >= 69;
+
+`10.7. Mostre o nome dos utentes que foram consultados a “PEDIATRIA”. `
+
+select c.codigo consulta, u.nome utente, e.especialidade_designacao
+FROM consulta_medica c, utente u, especialidade e, medico m
+WHERE u.numero_utente = c.utente 
+	AND m.numero_ordem = c.medico
+	AND m.especialidade = e.especialidade_codigo
+	AND e.especialidade_designacao in ('pediatria');
+
+
+`10.8. Algum utente com nome “Santoro” teve consulta de “GINECOLOGIA”?`
+SELECT c.codigo consulta, u.nome utente, e.especialidade_designacao
+FROM consulta_medica c, utente u, especialidade e, medico m
+WHERE u.numero_utente = c.utente
+	AND m.numero_ordem = c.medico
+	AND m.especialidade = e.especialidade_codigo
+	AND e.especialidade_designacao in ('GINECOLOGIA')
+	AND u.nome like '%Santoro%'; 
+
+
+`10.9. Qual dos “Santoro” pagaram a consulta mais alta?`
+SELECT c.codigo consulta, u.nome utente, e.especialidade_preco preco_max
+FROM consulta_medica c, utente u, especialidade e, medico m
+WHERE u.numero_utente = c.utente
+	AND m.numero_ordem = c.medico
+	AND m.especialidade = e.especialidade_codigo
+	AND u.nome like '%Santoro%'
+	ORDER BY e.especialidade_preco desc limit 1;
+
+`10.10. Quais os nomes dos médicos, que viram as suas consultas não se realizarem?`
+
+select c.codigo consulta, m.nome, c.realizada
+FROM consulta_medica c, medico m
+WHERE m.numero_ordem = c.medico
+	AND NOT c.realizada;
+
+
+`11.1. Mostre o nome da especialidade de cada médico.`
+SELECT m.nome , e.especialidade_designacao 
+FROM medico m
+	INNER JOIN especialidade e on e.especialidade_codigo = m.especialidade;
+
+`11.2. Mostre quanto custou cada consulta.`
+codigo , preco 
+consulta , medico, especialidade
+
+SELECT c.codigo, e.especialidade_preco
+FROM consulta_medica c
+	INNER JOIN medico m ON m.numero_ordem = c.medico
+	INNER JOIN especialidade e ON e.especialidade_codigo = m.especialidade;
+
+`11.3. Mostre a especialidade que cada utente foi consultado.`
+
+SELECT c.codigo, u.nome, e.especialidade_designacao
+FROM utente u
+	INNER JOIN consulta_medica c ON u.numero_utente = c.utente
+	INNER JOIN medico m ON m.numero_ordem = c.medico
+	INNER JOIN especialidade e ON e.especialidade_codigo = m.especialidade
+WHERE c.realizada = 1;
+
+`11.4. Mostre os utentes e médicos que moram na mesma localidade.`
+SELECT u.nome, m.nome , u.codigo_postal
+FROM utente u
+	INNER JOIN medico m ON m.codigo_postal = u.codigo_postal;
+
+`11.5. Faça uma listagem das consultas médicas com indicação dos nomes do médico e da utente e ainda o preço da consulta.`
+SELECT c.codigo , u.nome, m.nome , e.especialidade_preco
+FROM utente u
+	INNER JOIN consulta_medica c ON u.numero_utente = c.utente
+	INNER JOIN medico m ON m.numero_ordem = c.medico
+	INNER JOIN especialidade e ON e.especialidade_codigo = m.especialidade;
+
+`11.6. Mostre o nome de todos os utentes que pagaram mais que 69,00 € por uma consulta.`
+SELECT c.codigo, u.nome , e.especialidade_preco
+FROM utente u
+	INNER JOIN consulta_medica c ON u.numero_utente = c.utente
+	INNER JOIN medico m ON m.numero_ordem = c.medico
+	INNER JOIN especialidade e ON e.especialidade_codigo = m.especialidade
+WHERE e.especialidade_preco > 69;
+
+
+`11.7. Mostre o nome dos utentes que foram consultados a “PEDIATRIA”.`
+SELECT c.codigo, u.nome, e.especialidade_designacao
+FROM utente u
+	INNER JOIN consulta_medica c ON u.numero_utente = c.utente
+	INNER JOIN medico m ON m.numero_ordem = c.medico
+	INNER JOIN especialidade e ON e.especialidade_codigo = m.especialidade
+WHERE e.especialidade_designacao = 'pediatria';
+
+
+`11.8. Algum utente com nome “Santoro” teve consulta de “GINECOLOGIA”?`
+SELECT c.codigo, u.nome, e.especialidade_designacao
+FROM utente u
+	INNER JOIN consulta_medica c ON u.numero_utente = c.utente
+	INNER JOIN medico m ON m.numero_ordem = c.medico
+	INNER JOIN especialidade e ON e.especialidade_codigo = m.especialidade
+WHERE u.nome like '%santoro%'
+AND e.especialidade_designacao = 'GINECOLOGIA';
+
+
+`11.9. Qual dos “Santoro” pagaram a consulta mais alta?`
+SELECT c.codigo, u.nome, e.especialidade_preco
+FROM utente u
+	INNER JOIN consulta_medica c ON u.numero_utente = c.utente
+	INNER JOIN medico m ON m.numero_ordem = c.medico
+	INNER JOIN especialidade e ON e.especialidade_codigo = m.especialidade
+WHERE u.nome like '%santoro%'
+ORDER BY e.especialidade_preco desc limit 1;
+
+`11.10. Quais os nomes dos médicos, que viram as suas consultas não se realizarem?`
+SELECT c.codigo, m.nome, c.realizada
+FROM consulta_medica c
+	INNER JOIN medico m ON m.numero_ordem = c.medico 
+	INNER JOIN especialidade e ON e.especialidade_codigo = m.especialidade
+WHERE NOT c.realizada;
