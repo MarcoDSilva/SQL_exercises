@@ -281,6 +281,8 @@ FROM consulta_medica c
 	INNER JOIN especialidade e ON e.especialidade_codigo = m.especialidade
 WHERE NOT c.realizada;
 
+
+`OUTER JOINS`
 `12.1. Mostre todas as localidades com os respetivos utentes que lá residem.`
 SELECT cp.localidade, u.nome, cp.codigo_postal
 FROM codigo_postal cp 
@@ -299,6 +301,167 @@ FROM utente u
 	LEFT JOIN consulta_medica c 
 	ON u.numero_utente = c.utente;
 
-`
-12.3. Mostre todas as localidades cujos seus utentes nunca fizeram nenhuma consulta.
-12.4. Mostre todos os utentes que nunca tiveram nenhuma consulta.`
+`12.3. Mostre todas as localidades cujos seus utentes nunca fizeram nenhuma consulta.`
+utente nome , consulta realizada 
+
+SELECT cp.localidade, c.realizada consulta
+FROM utente u 
+	LEFT JOIN consulta_medica c
+	ON u.numero_utente = c.utente
+	LEFT JOIN codigo_postal cp 
+	ON u.codigo_postal = cp.codigo_postal
+WHERE NOT c.realizada;
+
+`12.4. Mostre todos os utentes que nunca tiveram nenhuma consulta.`
+SELECT u.nome, c.realizada consulta 
+FROM utente u
+	LEFT JOIN consulta_medica c 
+	ON u.numero_utente = c.utente 
+	WHERE NOT c.realizada;
+
+`UNIONS`
+`13.1. Liste o nome e o código postal de todos os utentes e de todos os médicos na mesma consulta`
+SELECT u.nome, u.codigo_postal
+FROM utente u
+UNION 
+SELECT m.nome, m.codigo_postal
+FROM medico m;
+
+
+`13.2. Liste todos os códigos postais usados por utentes e médicos, sem repetições.`
+SELECT u.codigo_postal
+FROM utente u 
+UNION
+select m.codigo_postal
+FROM medico m;
+
+
+`agregação`
+`14.1. Quantos utentes estão registados na clinica?`
+SELECT count(u.numero_utente) as total_de_utentes
+FROM utente u;
+
+`14.2. Quantos utentes já tiveram consultas?`
+SELECT  count(c.realizada) as total_consultados
+FROM consulta_medica c
+WHERE c.realizada
+GROUP BY c.realizada;
+
+`14.3. Quanto cada utente já despendeu em consultas?`
+SELECT u.nome, sum(e.especialidade_preco) as preco 
+FROM utente u
+INNER JOIN consulta_medica c ON c.utente = u.numero_utente
+INNER JOIN medico m ON m.numero_ordem = c.medico
+INNER JOIN especialidade e ON m.especialidade = e.especialidade_codigo
+GROUP BY u.nome;
+
+`14.4. Quanto cada médico já contribuiu para o lucro da clinica?`
+SELECT m.nome, sum(e.especialidade_preco) as preco 
+FROM medico m
+INNER JOIN consulta_medica c ON c.medico = m.numero_ordem
+INNER JOIN especialidade e ON m.especialidade = e.especialidade_codigo
+GROUP BY m.nome;
+
+
+`14.5. Quantos utentes não têm telefone?`
+SELECT count(1) as utentes_sem_telefone
+FROM utente u
+WHERE u.telefone IS NULL;
+
+SELECT count(u.nome) as utentes_sem_telefone
+FROM utente u
+WHERE u.telefone IS NULL;
+
+`14.6. Qual é a média de gastos de cada utente?`
+SELECT u.nome, avg(e.especialidade_preco) as preco 
+FROM utente u
+INNER JOIN consulta_medica c ON c.utente = u.numero_utente
+INNER JOIN medico m ON m.numero_ordem = c.medico
+INNER JOIN especialidade e ON m.especialidade = e.especialidade_codigo
+GROUP BY u.nome;
+
+`14.7. Qual o melhor médico, em termos financeiros?`
+SELECT m.nome, sum(e.especialidade_preco) as preco 
+FROM medico m
+	INNER JOIN consulta_medica c ON c.medico = m.numero_ordem
+	INNER JOIN especialidade e ON m.especialidade = e.especialidade_codigo
+GROUP BY m.nome 
+HAVING preco = (
+				SELECT MAX(ganhos_maximos.preco) as abc
+				FROM (
+					SELECT m.nome, sum(e.especialidade_preco) as preco 
+					FROM medico m
+						INNER JOIN consulta_medica c ON c.medico = m.numero_ordem
+						INNER JOIN especialidade e ON m.especialidade = e.especialidade_codigo
+					GROUP BY m.nome) 
+					ganhos_maximos
+				);
+
+
+`14.8. Quanto já rendeu cada especialidade?`
+SELECT e.especialidade_designacao, sum(e.especialidade_preco) AS total_rendimento
+FROM especialidade e
+	INNER JOIN medico m ON e.especialidade_codigo = m.especialidade
+	INNER JOIN consulta_medica c ON c.medico = m.numero_ordem
+GROUP BY e.especialidade_codigo;
+
+`14.9. Qual o resultado bruto da clinica?`
+SELECT SUM(e.especialidade_preco) AS total_bruto
+FROM especialidade e 
+	INNER JOIN medico m ON e.especialidade_codigo = m.especialidade
+	INNER JOIN consulta_medica c ON c.medico = m.numero_ordem;
+
+`14.10. Obtenha a lista de todos os utentes consultados, em que o nome apareça repetido 3 vezes.`
+SELECT u.nome
+FROM consulta_medica c 
+	INNER JOIN utente u ON c.utente = u.numero_utente
+GROUP BY u.nome
+HAVING count(u.nome) = 3;
+
+`14.11. Sabendo que 23% do valor arrecadado pela clinica é IVA, qual o valor real que a clinica recebeu?`
+SELECT SUM((e.especialidade_preco) / 1.23) AS total_apos_iva
+FROM especialidade e 
+	INNER JOIN medico m ON e.especialidade_codigo = m.especialidade
+	INNER JOIN consulta_medica c ON c.medico = m.numero_ordem;
+
+`14.12. Sabendo que apenas 20% do valor recebido pela clinica é que é lucro, calcule até ao momento o lucro da instituição.`
+
+SELECT SUM(e.especialidade_preco) - SUM((e.especialidade_preco) * 0.80) AS total_apos_desconto
+FROM especialidade e 
+	INNER JOIN medico m ON e.especialidade_codigo = m.especialidade
+	INNER JOIN consulta_medica c ON c.medico = m.numero_ordem;
+
+`14.13. Qual o médico que mais consultas deu?`
+SELECT m.nome, count(c.medico) as consultas_dadas 
+FROM medico m
+	INNER JOIN consulta_medica c ON c.medico = m.numero_ordem
+GROUP BY c.medico;
+
+
+`14.14. Qual o utente que menos consultas realizadas?`
+SELECT u.nome, count(c.utente) as consultas_obtidas
+FROM utente u 
+	INNER JOIN consulta_medica c ON c.utente = u.numero_utente
+GROUP BY c.utente
+ORDER BY consultas_obtidas asc limit 1;
+
+
+`14.15. Quais as especialidades que tem mais consultas não realizadas?`
+SELECT e.especialidade_designacao, count(c.realizada) faltas
+FROM especialidade e 
+	INNER JOIN medico m ON e.especialidade_codigo = m.especialidade
+	INNER JOIN consulta_medica c ON c.medico = m.numero_ordem
+WHERE c.realizada = 0
+GROUP BY e.especialidade_designacao;
+
+`14.16. Consultas canceladas após as 18:00, têm uma taxa de 2,00€. Qual o valor que cada utente tem a pagar?`
+
+SELECT c.data_hora, concat(c.realizada * 2, " euros") as multa, u.nome
+FROM consulta_medica c
+	INNER JOIN utente u ON u.numero_utente = c.utente
+WHERE hour(c.data_hora) >= 18 AND realizada = 0;
+
+`14.17. Quantas pessoas têm “Galvão”, com e sem acento no seu nome?`
+
+`14.18. Calcule o total de consultas por utente e por especialidade.`
+`14.19. Quantos utentes que não têm telefone já tiveram consulta a “Ginecologia”?`
