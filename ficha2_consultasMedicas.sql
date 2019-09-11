@@ -435,7 +435,15 @@ FROM especialidade e
 SELECT m.nome, count(c.medico) as consultas_dadas 
 FROM medico m
 	INNER JOIN consulta_medica c ON c.medico = m.numero_ordem
-GROUP BY c.medico;
+GROUP BY c.medico
+HAVING consultas_dadas = (
+							SELECT MAX(total.consultas_dadas)
+							FROM (SELECT m.nome, count(c.medico) as consultas_dadas 
+							FROM medico m
+								INNER JOIN consulta_medica c ON c.medico = m.numero_ordem
+							GROUP BY c.medico) total
+							);
+
 
 
 `14.14. Qual o utente que menos consultas realizadas?`
@@ -462,6 +470,13 @@ FROM consulta_medica c
 WHERE hour(c.data_hora) >= 18 AND realizada = 0;
 
 `14.17. Quantas pessoas têm “Galvão”, com e sem acento no seu nome?`
+SELECT count(u.nome) galvao 
+FROM utente u 
+WHERE u.nome = '%galv_o%';
 
-`14.18. Calcule o total de consultas por utente e por especialidade.`
-`14.19. Quantos utentes que não têm telefone já tiveram consulta a “Ginecologia”?`
+`14.18. Calcule o total de consultas por utente e por especialidade. tbf`
+SELECT u.nome, count(c.co)
+FROM consulta_medica c
+	INNER JOIN medico m ON m.numero_ordem = c.medico
+	INNER JOIN utente u ON u.numero_utente = c.utente
+	INNER JOIN especialidade e ON e.especialidade_codigo = m.especialidade;
